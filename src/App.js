@@ -7,6 +7,7 @@ import Auth from './containers/Auth/Auth'
 import {autoLogin} from './store/actions/auth'
 
 
+
 class App extends Component {
 
     componentDidMount() {
@@ -15,23 +16,23 @@ class App extends Component {
 
     render() {
 
-        // let routes = (
-        //     <Switch>
-        //         <Route path="/login" component={Auth}/>
-        //         <Redirect to="/login"/>
-        //     </Switch>
-        // )
+        let routes = (
+            <Switch>
+                <Route path="/login" component={Auth}/>
+                <Redirect to="/login"/>
+            </Switch>
+        )
 
-        // if (this.props.isAuthenticated) {
-        // if (this.props.isAuthenticated) {
-            let routes = (
+        if (this.props.isAuthenticated) {
+
+            routes = (
                 <Switch>
                     <Route path="/home" component={User}/>
                     <Route path="/edit/:id" component={Edit}/>
                     <Redirect to="/home"/>
                 </Switch>
             )
-        // }
+        }
         return (
             <div>
                 {routes}

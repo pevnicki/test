@@ -106,13 +106,30 @@ class Edit extends Component {
         this.props.fetchUserById(this.props.match.params.id)
     }
 
+    // static getDerivedStateFromProps(nextProps, prevState) {
+    //     if ( nextProps.user && prevState.user !== nextProps.user) {
+    //         const formControls = {...prevState.formControls}
+    //         Object.keys(formControls).forEach(p => {
+    //             if (p == 'date') {
+    //                 formControls[p].value = moment(nextProps.user[p]).format('YYYY-MM-DD')
+    //             } else {
+    //                 formControls[p].value = nextProps.user[p]
+    //             }
+    //             formControls[p].valid = true
+    //         })
+    //         return {
+    //             formControls,
+    //             isFormValid: true
+    //         }
+    //     }
+    //     return null
+    // }
+
     componentWillReceiveProps(nextProps) {
         if (this.props.user !== nextProps.user) {
             const formControls = {...this.state.formControls}
             Object.keys(formControls).forEach(p => {
-              if(p=='date')  {
-                  console.log(nextProps.user[p])
-                  console.log(moment(nextProps.user[p]).format('DD-MM-YYYY'))
+              if(p === 'date')  {
                   formControls[p].value = moment(nextProps.user[p]).format('YYYY-MM-DD')
               }else{
                   formControls[p].value = nextProps.user[p]
@@ -131,21 +148,6 @@ class Edit extends Component {
 
     submitHandler = event => {
         event.preventDefault()
-    }
-
-    editHandler = () => {
-        const updatedUser = {
-            id: this.props.match.params.id,
-            firstName: this.state.formControls.firstName.value,
-            lastName: this.state.formControls.lastName.value,
-            email: this.state.formControls.email.value,
-            date: this.state.formControls.date.value,
-            phone: this.state.formControls.phone.value,
-            account: this.state.formControls.account.value,
-            accountName: this.state.formControls.accountName.value
-        }
-        this.props.editUser(updatedUser)
-        this.props.history.push('/home')
     }
 
     validateControl(value, validation) {
@@ -208,7 +210,20 @@ class Edit extends Component {
             )
         })
     }
-
+    editHandler = () => {
+        const updatedUser = {
+            id: this.props.match.params.id,
+            firstName: this.state.formControls.firstName.value,
+            lastName: this.state.formControls.lastName.value,
+            email: this.state.formControls.email.value,
+            date: this.state.formControls.date.value,
+            phone: this.state.formControls.phone.value,
+            account: this.state.formControls.account.value,
+            accountName: this.state.formControls.accountName.value
+        }
+        this.props.editUser(updatedUser)
+        this.props.history.push('/home')
+    }
     render() {
         return (
             <div className='container-sm edit'>

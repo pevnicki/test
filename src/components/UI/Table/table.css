@@ -1,7 +1,6 @@
 
 .Row {
     display: table;
-    width: 100%; /*Optional*/
     table-layout: fixed; /*Optional*/
 }
 .Column {
@@ -10,12 +9,11 @@
 .Row .Column:nth-child(1){
     cursor: pointer;
     text-align: left;
-    width: 1rem;
+    width: 5%;
 }
 .Row .Column:nth-child(2){
     text-align: center;
-    width: 10%;
-    height: 1vm;
+    width: 5%;
 }
 .Row .Column:nth-child(3){
     text-align: right;

@@ -36,6 +36,7 @@ export default function userReducer(state = initialState, action) {
                 ...state, loading: false, error: action.error
             }
         case EDIT_USER_SUCCESS:
+            console.log(action.payload)
             return {
                 ...state,
                 loading: false,

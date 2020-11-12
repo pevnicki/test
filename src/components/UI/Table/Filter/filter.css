@@ -1,9 +1,0 @@
-.custom-filter{
-    width: 100%;
-    margin-bottom: 1rem;
-    overflow:auto;
-}
-.custom-filter > div{
-    width: 40%;
-    float:right;
-}

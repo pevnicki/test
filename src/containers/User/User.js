@@ -1,123 +1,175 @@
-import React, {Component} from 'react'
-import _ from 'lodash'
-import moment from 'moment';
-import {extendMoment} from 'moment-range';
+import React, {useMemo, useEffect} from 'react'
+import moment from 'moment'
+import {useHistory } from "react-router-dom"
 import {withRouter} from 'react-router-dom'
 import {connect} from 'react-redux'
-import Table from '../../components/UI/Table/Table'
-import Filter from '../../components/UI/Table/Filter/Filter'
-import {fetchUserById, fetchUsers} from '../../store/actions/user'
-import Loader from "../../components/UI/Loader/Loader";
+import {fetchUsers} from '../../store/actions/user'
+import Loader from "../../components/UI/Loader/Loader"
 import './user.css'
+import Table from "../../components/UI/Table/Table"
 
-const mmt = extendMoment(moment);
+function SelectColumnFilter({column: { filterValue, setFilter, preFilteredRows, id }}) {
+    const options = React.useMemo(() => {
+        const values=[
+            {
+                name: 'Select…',
+                value: null,
+            },
+            {
+                name: 'היום',
+                value: 'today'
+            },
+            {
+                name: 'השבוע',
+                value: 'thisWeek'
+            },
+            {
+                name: 'החודש',
+                value: 'thisMonth'
+            },
+            {
+                name: 'השנה',
+                value: 'thisYear'
+            },
+            {
+                name: 'מעל שנה',
+                value: 'overAYear'
+            }
+        ]
+        return [...values]
+    }, [id, preFilteredRows])
 
-class User extends Component {
+    return (
+        <select
+            value={filterValue}
+            onChange={e => {setFilter(e.target.value || undefined)}}
+        >
+            <option value="">All</option>
+            {options.map((option, i) => (
+                <option key={i} value={option.value}>
+                    {option.name}
+                </option>
+            ))}
+        </select>
+    )
+}
 
-    state = {
-        users: undefined,
-        sort: 'asc',
-        sortField: 'id'
-    }
-
-    componentDidMount() {
-        console.log("componentDidMount")
-        this.props.fetchUsers()
-    }
-
-
-    onSort = (sortField) => {
-        const clonedData = this.props.users.concat()
-        const sortType = this.state.sort === 'asc' ? 'desc' : 'asc'
-        const orderedData = _.orderBy(clonedData, sortField, sortType)
-        this.setState({
-            users: orderedData,
-            sort: sortType,
-            sortField
+function NumberRangeColumnFilter({column: { filterValue = [], preFilteredRows, setFilter, id }}) {
+    const [min, max] = React.useMemo(() => {
+        let min = preFilteredRows.length ? preFilteredRows[0].values[id] : 0
+        let max = preFilteredRows.length ? preFilteredRows[0].values[id] : 0
+        preFilteredRows.forEach(row => {
+            min = Math.min(row.values[id], min)
+            max = Math.max(row.values[id], max)
         })
+        return [min, max]
+    }, [id, preFilteredRows])
+
+    return (
+        <div
+            style={{
+                display: 'flex',
+            }}
+        >
+            Less:<input
+                value={filterValue[0] || ''}
+                type="number"
+                onChange={e => {
+                    const val = e.target.value
+                    setFilter((old = []) => [val ? parseInt(val, 10) : undefined, old[1]])
+                }}
+                placeholder={`More`}
+                style={{
+                    width: '50px',
+                    marginRight: '0.5rem',
+                }}
+            />
+            More:
+            <input
+                value={filterValue[1] || ''}
+                type="number"
+                onChange={e => {
+                    const val = e.target.value
+                    setFilter((old = []) => [old[0], val ? parseInt(val, 10) : undefined])
+                }}
+                placeholder={`Less`}
+                style={{
+                    width: '50px',
+                    marginLeft: '0.5rem',
+                }}
+            />
+        </div>
+    )
+}
+
+const User = ({loading, users, fetchUsers}) => {
+
+    useEffect(() => {
+        fetchUsers()
+    },[])
+
+    const columns = useMemo(() => [{
+        Header: 'User list',
+        columns: [
+            {
+                Header: "Id",
+                label: "Id",
+                accessor: 'id',
+                Filter:NumberRangeColumnFilter,
+                filter: 'between'
+            },
+            {
+                Header: 'First Name',
+                label: "First Name",
+                accessor: 'firstName',
+            },
+            {
+                Header: 'Last Name',
+                label: 'Last Name',
+                accessor: 'lastName',
+
+
+            },
+            {
+                Header: 'Date',
+                label: 'Date',
+                accessor: d => moment(d.date).format("DD-MM-YYYY"),
+                Filter: SelectColumnFilter,
+                filter: 'dateFilter',
+
+            },
+            {
+                Header: 'Phone',
+                label: 'Phone',
+                accessor: 'phone',
+            },
+        ]
+    }
+    ], [])
+
+    const history = useHistory();
+    const onRowSelect = row => {
+        history.push(`/edit/${row.id}`);
     }
 
-    onGlobalFilterChange = e => {
-        const k = e.target.value.toString().toLowerCase()
-        const clonedData = this.props.users.concat()
-        let filteredData = clonedData.filter(value => {
-            return (
-                value.id.toString().toLowerCase().includes(k) ||
-                value.firstName.toLowerCase().includes(k) ||
-                value.lastName.toLowerCase().includes(k) ||
-                value.date.toLowerCase().includes(k) ||
-                value.phone.toString().toLowerCase().includes(k)
-            )
-        });
-        this.setState({
-            users: filteredData,
-        })
-    }
 
-    onStringFilterChange = (field, e) => {
-        const clonedData = this.props.users.concat()
-        let filteredData = clonedData.filter(value => {
-            return (
-                value[field].toString().toLowerCase().includes(e.target.value.toString().toLowerCase())
-            )
-        })
-        this.setState({
-            users: filteredData,
-        })
-    }
-    onDateFilterChange = (type) => {
-        const clonedData = this.props.users.concat()
-        console.log( moment('"2020-11-10T10:12:31.775Z"',"YYYY-MM-DD").isSame(moment().format("YYYY-MM-DD")))
-        let filteredData
-        switch (type) {
-            case 'today':
-                filteredData = clonedData.filter(value => {
-                    return (
-                        moment(value.date,"YYYY-MM-DD").isSame(moment().format("YYYY-MM-DD"))
-                    )
-                })
-            case 'thisWeek':
-                filteredData = clonedData.filter(value => {
-                    return (
-                        mmt.range(moment().startOf('week'), new Date()).contains(value.date)
-                    )
-                })
+    return (
+        <div className='container-sm user'>
+            <h1>Users list</h1>
+            {loading ?
+                <Loader/> :
+                <div>
+                    {/*<Filter onInputChange={this.onGlobalFilterChange}/>*/}
+                    <Table
+                        data={users}
+                        columns={columns}
+                        onRowSelect={onRowSelect}
+                    />
+                </div>
+            }
+        </div>
+    );
 
-
-        }
-
-
-        this.setState({
-            users: filteredData,
-        })
-    }
-
-    onRowSelect = row => {
-       this.props.history.push(`/edit/${row.id}`);
-    }
-
-    render() {
-        return (
-            <div className='container-sm user'>
-                <h1>Users list</h1>
-                {this.props.loading ?
-                    <Loader/> :
-                    <div>
-                        <Filter onInputChange={this.onGlobalFilterChange}/>
-                        <Table
-                            data={!this.state.users ? this.props.users : this.state.users}
-                            onSort={this.onSort}
-                            sort={this.state.sort}
-                            sortField={this.state.sortField}
-                            onRowSelect={this.onRowSelect}
-                            onStringFilterChange={this.onStringFilterChange}
-                            onDateFilterChange={this.onDateFilterChange}
-                        />
-                    </div>
-                }
-            </div>
-        );
-    }
 }
 
 function mapStateToProps(state) {
